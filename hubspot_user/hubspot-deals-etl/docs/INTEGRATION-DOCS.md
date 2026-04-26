@@ -11,18 +11,18 @@ The Deals API Service integrates with HubSpot REST API endpoints to extract DEAL
 ### ✅ **Required Endpoint (Essential)**
 | **API Endpoint**                    | **Purpose**                          | **Version** | **Required Permissions** | **Usage**    |
 |-------------------------------------|--------------------------------------|-------------|--------------------------|--------------|
-| `/crm/v3/objects/0-3/search`    | Search and list deals           | `v3` | `crm.objects.deals.read`      | **Required** |
+| `/crm/v3/objects/deals/search`    | Search and list deals           | `v3` | `crm.objects.deals.read`      | **Required** |
 
 ### 🔧 **Optional Endpoints (Advanced Features)**
 | **API Endpoint**                    | **Purpose**                          | **Version** | **Required Permissions** | **Usage**    |
 |-------------------------------------|--------------------------------------|-------------|--------------------------|--------------|
-| `/crm/v3/objects/0-3/{dealId}`         | Get detailed deal information   | `v3` | `crm.objects.deals.read`      | Optional     |
-| `/crm/v3/objects/0-3/{dealId}/associations/{toObjectType}`         | Get deal associations (contacts, companies, etc.)         | `v3` | `crm.objects.deals.read`      | Optional     |
-| `/crm/v3/objects/0-3/{dealId}?properties`         | Get deal with specific properties       | `v3` | `crm.objects.deals.read`      | Optional     |
-| `/crm/v3/objects/0-3/{dealId}/associations/line_items`         | Get line items associated with deal      | `v3` | `crm.objects.deals.read`      | Optional     |
+| `/crm/v3/objects/deals/{dealId}`         | Get detailed deal information   | `v3` | `crm.objects.deals.read`      | Optional     |
+| `/crm/v3/objects/deals/{dealId}/associations/{toObjectType}`         | Get deal associations (contacts, companies, etc.)         | `v3` | `crm.objects.deals.read`      | Optional     |
+| `/crm/v3/objects/deals/{dealId}?properties`         | Get deal with specific properties       | `v3` | `crm.objects.deals.read`      | Optional     |
+| `/crm/v3/objects/deals/{dealId}/associations/line_items`         | Get line items associated with deal      | `v3` | `crm.objects.deals.read`      | Optional     |
 
 ### 🎯 **Recommendation**
-**Start with only the required endpoint.** The `/crm/v3/objects/0-3` endpoint provides all essential deal data needed for basic DEAL analytics and extraction.
+**Start with only the required endpoint.** The `/crm/v3/objects/deals` endpoint provides all essential deal data needed for basic DEAL analytics and extraction.
 
 ---
 
