@@ -315,99 +315,113 @@ Content-Type: application/json
 
 ### **Single Endpoint Approach - `/crm/v3/objects/deals` Only**
 ```python
-def extract_all_objects_simple():
-    """Extract all [objects] using only the /[primary_endpoint] endpoint"""
-    start_at = 0
+def extract_all_deals_simple():
+    """Extract all deals using only the /crm/v3/objects/deals endpoint"""
+    after = None
     batch_size = 50
-    all_objects = []
-    
+    all_deals = []
+
     while True:
+        params = {
+            "limit": batch_size,
+            "archived": False,
+            "properties": "dealname,amount,closedate,dealstage,pipeline"
+        }
+        if after:
+            params["after"] = after
+
         response = requests.get(
-            f"{base_url}/[api_path]/[primary_endpoint]",
-            params={
-                "[pagination_param]": start_at,
-                "[size_param]": batch_size
-            },
+            f"{base_url}/crm/v3/objects/deals",
+            params=params,
             headers=auth_headers
         )
-        
+
         data = response.json()
-        objects = data.get("[data_array]", [])
-        
-        if not objects:  # No more objects
+        deals = data.get("results", [])
+
+        if not deals:  # No more deals
             break
-            
-        all_objects.extend(objects)
-        
-        # Check if this is the last page
-        if data.get("[pagination_last]", True):
+
+        all_deals.extend(deals)
+
+        # Check if there is a next page
+        after = data.get("paging", {}).get("next", {}).get("after")
+        if not after:
             break
-            
-        start_at += batch_size
-    
-    return all_objects
+
+    return all_deals
 
 # This gives you ALL essential deal data:
-# - [field_id], [field_name], [field_type]
-# - [nested_object] with [nested_field_1], [nested_field_2], [nested_field_3]
-# - [field_url] for reference
+# - id, createdAt, updatedAt, archivedAt, archived
+# - properties with dealname, amount, closedate, dealstage, pipeline
+# - url for reference
 ```
 
 ---
 
 ### 🔧 **ADVANCED FLOW (Optional - Multiple Endpoints)**
 
-> **⚠️ Only use this if you need [related_data], [configuration], or [additional_data] data**
+> **⚠️ Only use this if you need detailed deal info, associations, specific properties, or line item data**
 
 ### **Step 1: Batch deal Retrieval**
 ```python
-# Get [objects] in batches of 50
-for start_at in range(0, total_objects, 50):
+# Get deals in batches of 50
+after = None
+
+while True:
     response = requests.get(
-        f"{base_url}/[api_path]/[primary_endpoint]",
+        f"{base_url}/crm/v3/objects/deals",
         params={
-            "[pagination_param]": start_at,
-            "[size_param]": 50
+            "limit": 50,
+            "archived": False,
+            "after": after
         },
         headers=auth_headers
     )
-    objects_data = response.json()
-    objects = objects_data.get("[data_array]", [])
+    deals_data = response.json()
+    deals = deals_data.get("results", [])
+
+    after = deals_data.get("paging", {}).get("next", {}).get("after")
+    if not after:
+        break
 ```
 
 ### **Step 2: Enhanced deal Details (Optional)**
 ```python
 # Get detailed information for each deal
-for obj in objects:
+for deal in deals:
     response = requests.get(
-        f"{base_url}/[api_path]/[endpoint_1]/{obj['[field_id]']}",
+        f"{base_url}/crm/v3/objects/deals/{deal['id']}",
         headers=auth_headers
     )
-    detailed_object = response.json()
+    detailed_deal = response.json()
 ```
 
 ### **Step 3: deal [Related Data] (Optional)**
 ```python
-# Get [related data] for each [specific type] deal
-for obj in objects:
-    if obj['[field_type]'] == '[specific_type]':
+# Get associations for each deal (contacts, companies, etc.)
+for deal in deals:
+    for object_type in ["contacts", "companies"]:
         response = requests.get(
-            f"{base_url}/[api_path]/[endpoint_2]/{obj['[field_id]']}/[related_endpoint]",
-            params={"[param2]": 50},
+            f"{base_url}/crm/v3/objects/deals/{deal['id']}/associations/{object_type}",
+            params={"limit": 50},
             headers=auth_headers
         )
-        object_related_data = response.json()
+        deal_associations = response.json()
 ```
 
 ### **Step 4: deal Configuration (Optional)**
 ```python
-# Get configuration for each deal
-for obj in objects:
+# Get deal with specific properties only
+for deal in deals:
     response = requests.get(
-        f"{base_url}/[api_path]/[endpoint_3]/{obj['[field_id]']}/[config_endpoint]",
+        f"{base_url}/crm/v3/objects/deals/{deal['id']}",
+        params={
+            "properties": "dealname,amount,closedate,dealstage,pipeline"
+        },
         headers=auth_headers
     )
-    object_config = response.json()
+    deal_properties = response.json()
 ```
 
 ---
