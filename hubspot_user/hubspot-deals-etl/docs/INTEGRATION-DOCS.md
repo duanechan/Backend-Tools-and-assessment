@@ -429,20 +429,20 @@ for deal in deals:
 ## ⚡ Performance Considerations
 
 ### **Rate Limiting**
-- **Default Limit**: [X] requests per [time period] per API token
-- **Burst Limit**: [Y] requests per [time period] (short duration)
-- **Best Practice**: Implement exponential backoff on [rate limit response code] responses
+- **Default Limit**: 250,000 requests per day per API token
+- **Burst Limit**: 100 requests per 10 seconds
+- **Best Practice**: Implement exponential backoff on 429 responses
 
 ### **Batch Processing**
-- **Recommended Batch Size**: [X] [objects] per request
-- **Concurrent Requests**: Max [N] parallel requests ([objects] are complex objects)
-- **Request Interval**: [X]ms between requests to stay under rate limits
+- **Recommended Batch Size**: 100 deals per request
+- **Concurrent Requests**: Max 10 parallel requests (Deals are complex objects)
+- **Request Interval**: 100ms between requests to stay under rate limits (100 requests/10 seconds)
 
 ### **Error Handling**
 ```http
 # Rate limit exceeded
-HTTP/[rate_limit_code] [Rate Limit Message]
-Retry-After: [retry_seconds]
+HTTP/429 Too Many Requests
+Retry-After: 1
 
 # Authentication failed  
 HTTP/401 Unauthorized
