@@ -1,12 +1,12 @@
 # 📋 Deals API Service - Integration with HubSpot API
 
-This document explains the HubSpot REST API endpoints required by the Deals API Service to extract DEAL data from HubSpot instances.
+This document explains the HubSpot REST API endpoints required by the Deals API Service to extract Deal data from HubSpot instances.
 
 ---
 
 ## 📋 Overview
 
-The Deals API Service integrates with HubSpot REST API endpoints to extract DEAL information. Below are the required and optional endpoints:
+The Deals API Service integrates with HubSpot REST API endpoints to extract Deal information. Below are the required and optional endpoints:
 
 ### ✅ **Required Endpoint (Essential)**
 | **API Endpoint**                    | **Purpose**                          | **Version** | **Required Permissions** | **Usage**    |
@@ -22,7 +22,7 @@ The Deals API Service integrates with HubSpot REST API endpoints to extract DEAL
 | `/crm/v3/objects/deals/{dealId}/associations/line_items`         | Get line items associated with deal      | `v3` | `crm.objects.deals.read`      | Optional     |
 
 ### 🎯 **Recommendation**
-**Start with only the required endpoint.** The `/crm/v3/objects/deals` endpoint provides all essential deal data needed for basic DEAL analytics and extraction.
+**Start with only the required endpoint.** The `/crm/v3/objects/deals` endpoint provides all essential deal data needed for basic Deal analytics and extraction.
 
 ---
 
@@ -36,7 +36,6 @@ Content-Type: application/json
 
 ### **Required Permissions**
 - **`crm.objects.deals.read`**: fetch, search, & list
-- **`crm.objects.deals.write`**: create, update, & delete
 
 ---
 
@@ -463,27 +462,29 @@ HTTP/404 Not Found
 #### ✅ **Required (Minimum Permissions)**
 ```
 Required Scopes:
-- [scope_1] (for basic deal information)
+- `crm.objects.deals.read` (for basic deal information)
+- `crm.objects.deals.write` (for creating/updating deals)
 ```
 
 #### 🔧 **Optional (Advanced Features)**
 ```
 Additional Scopes (only if using optional endpoints):
-- [scope_2] (for [related data] information)
-- [scope_3] (for deal configuration)
+- `crm.schemas.deals.read` (for deal property/schema information)
+- `crm.schemas.deals.write` (for deal pipeline/property configuration)
+- `crm.objects.owners.read` (for deal owner information)
+- `crm.associations.read` / `crm.associations.write` (for associations to other objects)
 ```
 
 ### **User Permissions**
 
 #### ✅ **Required (Minimum)**
 The API token user must have:
-- **[Permission_1]** global permission
-- **[Permission_2]** permission
+- **Read** global permission access to deals
 
 #### 🔧 **Optional (Advanced Features)**
 Additional permissions (only if using optional endpoints):
-- **[Permission_3]** permission (for deal configuration details)
-- **[Permission_4]** (for [additional data] access)
+- **Read** permission access to properties (for deal configuration details)
+- **Read** permission access to associations (for associations access)
 
 ---
 
@@ -491,27 +492,27 @@ Additional permissions (only if using optional endpoints):
 
 ### **Request Headers for Debugging**
 ```http
-[AUTH_HEADER]: [AUTH_VALUE]
+Authorization: Bearer YOUR_ACCESS_TOKEN
 Content-Type: application/json
-User-Agent: [ServiceName]/1.0
+User-Agent: DealsAPI/1.0
 X-Request-ID: deal-scan-001-batch-1
 ```
 
 ### **Response Validation**
 ```python
 def validate_object_response(object_data):
-    required_fields = ["[field_id]", "[field_name]", "[field_type]", "[nested_object]"]
+    required_fields = ["id", "properties", "createdAt", "associations"]
     for field in required_fields:
         if field not in object_data:
             raise ValueError(f"Missing required field: {field}")
     
     # Validate deal type
-    if object_data["[field_type]"] not in ["[type_1]", "[type_2]"]:
+    if object_data["properties"] not in ["dealname", "dealstage"]:
         raise ValueError(f"Invalid deal type: {object_data['[field_type]']}")
 ```
 
 ### **API Usage Metrics**
-- Track requests per [time period]
+- Track requests per day
 - Monitor response times
 - Log rate limit headers
 - Track authentication failures
@@ -523,24 +524,24 @@ def validate_object_response(object_data):
 ### **Test Authentication**
 ```bash
 curl -X GET \
-  "https://[your_instance].[platform_domain]/[api_path]/[auth_test_endpoint]" \
-  -H "[AUTH_HEADER]: [AUTH_VALUE]" \
+  "https://api.hubapi.com/crm/v3/objects/deals?limit=1" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json"
 ```
 
 ### **Test deal Search**
 ```bash
 curl -X GET \
-  "https://[your_instance].[platform_domain]/[api_path]/[primary_endpoint]?[size_param]=5" \
-  -H "[AUTH_HEADER]: [AUTH_VALUE]" \
+  "https://api.hubapi.com/crm/v3/objects/deals?limit=5" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json"
 ```
 
 ### **Test deal Details**
 ```bash
 curl -X GET \
-  "https://[your_instance].[platform_domain]/[api_path]/[endpoint_1]/{objectId}" \
-  -H "[AUTH_HEADER]: [AUTH_VALUE]" \
+  "https://api.hubapi.com/crm/v3/objects/deals/{dealId}" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json"
 ```
 
@@ -549,15 +550,15 @@ curl -X GET \
 ## 🚨 Common Issues & Solutions
 
 ### **Issue**: 401 Unauthorized
-**Solution**: Verify [auth method] and [credential] combination
+**Solution**: Verify Private App Access Token
 ```bash
-[verification_command]
+echo $HUBSPOT_ACCESS_TOKEN
 ```
 
 ### **Issue**: 403 Forbidden
-**Solution**: Check user has "[Permission_1]" and "[Permission_2]" permissions
+**Solution**: Check user has `crm.objects.deals.read` permissions
 
-### **Issue**: [Rate Limit Code] Rate Limited
+### **Issue**: 429 Rate Limited
 **Solution**: Implement retry with exponential backoff
 ```python
 import time
@@ -574,36 +575,36 @@ def retry_with_backoff(func, max_retries=3):
 ```
 
 ### **Issue**: Empty deal List
-**Solution**: Check if user has access to [parent objects] with DEAL [objects]
+**Solution**: Check if user has access to the CRM pipeline with `crm.objects.deals.read` permissions or if there are any deals created.
 
 ### **Issue**: Need [Related Data]/Configuration But Want to Keep It Simple**
-**Solution**: Start with `/[primary_endpoint]` only. Add optional endpoints later if needed for advanced DEAL analytics
+**Solution**: Start with `/crm/v3/objects/deals` only. Add optional endpoints later if needed for advanced deal analytics.
 
 ---
 
 ## 💡 **Implementation Recommendations**
 
 ### 🎯 **Phase 1: Start Simple (Recommended)**
-1. Implement only `/[api_path]/[primary_endpoint]`
-2. Extract basic deal data ([field_id], [field_name], [field_type], [nested_object] info)
-3. This covers 90% of DEAL analytics needs
+1. Implement only `/crm/v3/objects/deals`
+2. Extract basic deal data (`id`, `properties.dealname`, `properties.dealstage`, `createdAt`, `updatedAt`)
+3. This covers 90% of Deal analytics needs
 
 ### 🔧 **Phase 2: Add Advanced Features (If Needed)**
-1. Add `/[api_path]/[endpoint_1]/{objectId}` for detailed deal info
-2. Add `/[api_path]/[endpoint_2]/{objectId}/[related_endpoint]` for [related data] analysis  
-3. Add `/[api_path]/[endpoint_3]/{objectId}/[config_endpoint]` for [workflow type] analysis
-4. Add `/[api_path]/[endpoint_4]/{objectId}/[additional_endpoint]` for [additional functionality]
+1. Add `/crm/v3/objects/deals/{dealId}` for detailed deal info
+2. Add `/crm/v3/objects/deals/{dealId}/associations/{toObjectType}` for association analysis  
+3. Add `/crm/v3/objects/deals/{dealId}?properties` for deal with specific properties
+4. Add `/crm/v3/objects/deals/{dealId}/associations/line_items` for line items associated with deal
 
 ### ⚡ **Performance Tip**
-- **Simple approach**: 1 API call per [batch_size] [objects]
-- **Advanced approach**: 1 + N API calls (N = number of [objects] for details)
+- **Simple approach**: 1 API call per 100 deals
+- **Advanced approach**: 1 + N API calls (N = number of deals for details)
 - Start simple to minimize API usage and complexity!
 
 ---
 
 ## 📞 Support Resources
 
-- **HubSpot API Documentation**: [API_DOCS_URL]
-- **Rate Limiting Guide**: [RATE_LIMIT_DOCS_URL]
-- **Authentication Guide**: [AUTH_DOCS_URL]
-- **DEAL Permissions Reference**: [PERMISSIONS_DOCS_URL]
+- **HubSpot API Documentation**: https://developers.hubspot.com/docs/api-reference/legacy/crm/objects/deals/guide
+- **Rate Limiting Guide**: https://developers.hubspot.com/docs/developer-tooling/platform/usage-guidelines
+- **Authentication Guide**: https://developers.hubspot.com/docs/guides/apps/authentication/intro-to-auth
+- **Deal Permissions Reference**: https://developers.hubspot.com/docs/guides/apps/authentication/scopes
