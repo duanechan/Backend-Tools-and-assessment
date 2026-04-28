@@ -1,6 +1,6 @@
 # 🗄️ Scan Job Database Schema Template
 
-This document provides a database schema template for implementing scan job functionality with two core tables: ScanJob and Results.
+This document provides a database schema template for implementing scan job functionality with two core tables: scans and results.
 
 ---
 
@@ -8,14 +8,14 @@ This document provides a database schema template for implementing scan job func
 
 The Scan Job database schema consists of two main tables:
 
-1. **ScanJob** - Core scan job management and tracking
-2. **[ResultTable]** - Storage for scan results and extracted data
+1. **scans** - Core scan job management and tracking
+2. **results** - Storage for scan results and extracted data
 
 ---
 
 ## 🏗️ Table Schemas
 
-### 1. ScanJob Table
+### 1. Scans Table
 
 **Purpose**: Core scan job management and status tracking
 
@@ -41,22 +41,22 @@ The Scan Job database schema consists of two main tables:
 **Indexes:**
 ```sql
 -- Performance indexes
-CREATE INDEX idx_scan_status_created ON scan_jobs(status, created_at);
-CREATE INDEX idx_scan_id_status ON scan_jobs(scan_id, status);
-CREATE INDEX idx_scan_type_status ON scan_jobs(scan_type, status);
-CREATE INDEX idx_scan_org_status ON scan_jobs(organization_id, status);
+CREATE INDEX idx_scan_status_created ON scans(status, created_at);
+CREATE INDEX idx_scan_id_status ON scans(scan_id, status);
+CREATE INDEX idx_scan_type_status ON scans(scan_type, status);
+CREATE INDEX idx_scan_org_status ON scans(organization_id, status);
 ```
 
 ---
 
-### 2. [ResultTable] Table (Completely Customizable)
+### 2. Results Table (Completely Customizable)
 
 **Purpose**: Store scan results and extracted data - **CUSTOMIZE FIELDS FOR YOUR DATA TYPE**
 
 | **Column Name**         | **Type**    | **Constraints**           | **Description**                          |
 |-------------------------|-------------|---------------------------|------------------------------------------|
 | `id`                    | String      | PRIMARY KEY               | Unique result identifier                 |
-| `scan_job_id`           | String      | FOREIGN KEY, NOT NULL     | Reference to scan_jobs.id               |
+| `scan_job_id`           | String      | FOREIGN KEY, NOT NULL     | Reference to scans.id               |
 | `[custom_field_1]`      | String/JSON | CUSTOMIZABLE              | **Replace with your data fields**       |
 | `[custom_field_2]`      | String/JSON | CUSTOMIZABLE              | **Replace with your data fields**       |
 | `[custom_field_3]`      | String/JSON | CUSTOMIZABLE              | **Replace with your data fields**       |
@@ -72,7 +72,7 @@ CREATE INDEX idx_scan_org_status ON scan_jobs(organization_id, status);
 ```sql
 CREATE TABLE user_results (
     id VARCHAR PRIMARY KEY,
-    scan_job_id VARCHAR NOT NULL REFERENCES scan_jobs(id),
+    scan_job_id VARCHAR NOT NULL REFERENCES scans(id),
     user_id VARCHAR NOT NULL,
     username VARCHAR,
     email VARCHAR,
@@ -90,7 +90,7 @@ CREATE TABLE user_results (
 ```sql
 CREATE TABLE project_results (
     id VARCHAR PRIMARY KEY,
-    scan_job_id VARCHAR NOT NULL REFERENCES scan_jobs(id),
+    scan_job_id VARCHAR NOT NULL REFERENCES scans(id),
     project_id VARCHAR NOT NULL,
     project_key VARCHAR,
     project_name VARCHAR,
@@ -108,7 +108,7 @@ CREATE TABLE project_results (
 ```sql
 CREATE TABLE calendar_events (
     id VARCHAR PRIMARY KEY,
-    scan_job_id VARCHAR NOT NULL REFERENCES scan_jobs(id),
+    scan_job_id VARCHAR NOT NULL REFERENCES scans(id),
     event_id VARCHAR NOT NULL,
     title VARCHAR,
     organizer_email VARCHAR,
@@ -126,7 +126,7 @@ CREATE TABLE calendar_events (
 ```sql
 CREATE TABLE scan_results (
     id VARCHAR PRIMARY KEY,
-    scan_job_id VARCHAR NOT NULL REFERENCES scan_jobs(id),
+    scan_job_id VARCHAR NOT NULL REFERENCES scans(id),
     result_data JSON NOT NULL,  -- Store everything in JSON
     result_type VARCHAR,        -- Optional: categorize results
     created_at TIMESTAMP NOT NULL,
@@ -137,12 +137,12 @@ CREATE TABLE scan_results (
 **Indexes (Customize based on your fields):**
 ```sql
 -- Basic performance indexes
-CREATE INDEX idx_result_scan_job ON [result_table](scan_job_id);
+CREATE INDEX idx_result_scan_job ON results(scan_job_id);
 
 -- CUSTOMIZE THESE based on your actual fields:
-CREATE INDEX idx_result_custom_field ON [result_table]([your_main_id_field]);
-CREATE INDEX idx_result_search ON [result_table]([your_searchable_field]);
-CREATE INDEX idx_result_filter ON [result_table]([your_filter_field]);
+CREATE INDEX idx_result_custom_field ON results([your_main_id_field]);
+CREATE INDEX idx_result_search ON results([your_searchable_field]);
+CREATE INDEX idx_result_filter ON results([your_filter_field]);
 
 -- Examples for different data types:
 -- For users: CREATE INDEX idx_user_email ON user_results(email);
@@ -159,11 +159,11 @@ CREATE INDEX idx_result_filter ON [result_table]([your_filter_field]);
 ### Primary Relationships
 ```sql
 -- ScanJob to Results (One-to-Many)
-scan_jobs.id ← [result_table].scan_job_id
+scans.id ← results.scan_job_id
 ```
 
 ### Cascade Behavior
-- **DELETE ScanJob**: Cascades to delete all related results
+- **DELETE Scan**: Cascades to delete all related results
 
 ---
 
@@ -174,12 +174,12 @@ scan_jobs.id ← [result_table].scan_job_id
 ```sql
 -- Get scan job with status
 SELECT id, scan_id, status, scan_type, total_items, processed_items 
-FROM scan_jobs 
+FROM scans 
 WHERE scan_id = 'your-scan-id';
 
 -- Get active scans
 SELECT scan_id, status, started_at, scan_type 
-FROM scan_jobs 
+FROM scans 
 WHERE status IN ('running', 'pending') 
 ORDER BY created_at DESC;
 
@@ -192,7 +192,7 @@ SELECT
         WHEN total_items > 0 THEN ROUND((processed_items * 100.0 / total_items), 2)
         ELSE 0 
     END as progress_percentage
-FROM scan_jobs 
+FROM scans 
 WHERE scan_id = 'your-scan-id';
 ```
 
@@ -201,19 +201,19 @@ WHERE scan_id = 'your-scan-id';
 ```sql
 -- Get paginated results (REPLACE field names with yours)
 SELECT id, [your_id_field], [your_name_field], [your_status_field]
-FROM [result_table] 
+FROM results 
 WHERE scan_job_id = 'job-id'
 ORDER BY created_at 
 LIMIT 100 OFFSET 0;
 
 -- Count results by type (REPLACE with your categorization field)
 SELECT [your_category_field], COUNT(*) as count
-FROM [result_table] 
+FROM results 
 WHERE scan_job_id = 'job-id'
 GROUP BY [your_category_field];
 
 -- Search results (CUSTOMIZE based on your searchable fields)
-SELECT * FROM [result_table] 
+SELECT * FROM results 
 WHERE scan_job_id = 'job-id' 
 AND [your_searchable_field] LIKE '%search_term%';
 
@@ -234,11 +234,11 @@ AND [your_searchable_field] LIKE '%search_term%';
 ```sql
 -- Get scan job status and basic info
 SELECT scan_id, status, started_at, completed_at, error_message
-FROM scan_jobs 
+FROM scans 
 WHERE scan_id = 'your-scan-id';
 
 -- Cancel a scan (update status)
-UPDATE scan_jobs 
+UPDATE scans 
 SET status = 'cancelled', 
     completed_at = CURRENT_TIMESTAMP,
     error_message = 'Cancelled by user'
@@ -254,7 +254,7 @@ AND status IN ('pending', 'running');
 
 ```sql
 -- Create scan job
-INSERT INTO scan_jobs (
+INSERT INTO scans (
     id, scan_id, status, scan_type, config, organization_id, batch_size
 ) VALUES (
     'uuid-1', 'my-scan-001', 'pending', 'user_extraction', 
@@ -267,7 +267,7 @@ INSERT INTO scan_jobs (
 
 ```sql
 -- Insert scan results - REPLACE with YOUR field names and values
-INSERT INTO [result_table] (
+INSERT INTO results (
     id, scan_job_id, [your_field_1], [your_field_2], [your_field_3]
 ) VALUES 
 ('uuid-3', 'uuid-1', '[value_1]', '[value_2]', '[value_3]'),
@@ -288,7 +288,7 @@ INSERT INTO [result_table] (
 -- VALUES ('uuid-3', 'uuid-1', 'evt-001', 'Team Meeting', 'manager@example.com', '2024-01-15 10:00:00');
 
 -- Update scan job progress
-UPDATE scan_jobs 
+UPDATE scans 
 SET processed_items = processed_items + 2,
     updated_at = CURRENT_TIMESTAMP
 WHERE id = 'uuid-1';
@@ -298,13 +298,13 @@ WHERE id = 'uuid-1';
 
 ```sql
 -- Start scan
-UPDATE scan_jobs 
+UPDATE scans 
 SET status = 'running', 
     started_at = CURRENT_TIMESTAMP 
 WHERE scan_id = 'my-scan-001';
 
 -- Complete scan
-UPDATE scan_jobs 
+UPDATE scans 
 SET status = 'completed', 
     completed_at = CURRENT_TIMESTAMP,
     success_rate = CASE 
@@ -319,7 +319,7 @@ WHERE scan_id = 'my-scan-001';
 ## 🔧 Customization Options
 
 ### Result Table Naming
-Replace `[result_table]` with your preferred name:
+Replace `results` with your preferred name:
 - `scan_results` (generic)
 - `user_results` (specific to user scans)
 - `extraction_results` (for data extraction)
@@ -328,13 +328,13 @@ Replace `[result_table]` with your preferred name:
 
 ### Result Table Customization Examples
 
-**Replace `[result_table]` and customize fields for your specific data:**
+**Replace `results` and customize fields for your specific data:**
 
 **1. User/People Data:**
 ```sql
 CREATE TABLE user_results (
     id VARCHAR PRIMARY KEY,
-    scan_job_id VARCHAR REFERENCES scan_jobs(id),
+    scan_job_id VARCHAR REFERENCES scans(id),
     user_id VARCHAR UNIQUE,
     username VARCHAR,
     email VARCHAR,
@@ -355,7 +355,7 @@ CREATE TABLE user_results (
 ```sql  
 CREATE TABLE project_results (
     id VARCHAR PRIMARY KEY,
-    scan_job_id VARCHAR REFERENCES scan_jobs(id),
+    scan_job_id VARCHAR REFERENCES scans(id),
     project_id VARCHAR UNIQUE,
     project_key VARCHAR,
     project_name VARCHAR,
@@ -376,7 +376,7 @@ CREATE TABLE project_results (
 ```sql
 CREATE TABLE issue_results (
     id VARCHAR PRIMARY KEY,  
-    scan_job_id VARCHAR REFERENCES scan_jobs(id),
+    scan_job_id VARCHAR REFERENCES scans(id),
     issue_id VARCHAR UNIQUE,
     issue_key VARCHAR,
     title VARCHAR,
@@ -400,7 +400,7 @@ CREATE TABLE issue_results (
 ```sql
 CREATE TABLE calendar_events (
     id VARCHAR PRIMARY KEY,
-    scan_job_id VARCHAR REFERENCES scan_jobs(id),
+    scan_job_id VARCHAR REFERENCES scans(id),
     event_id VARCHAR UNIQUE,
     calendar_id VARCHAR,
     title VARCHAR,
@@ -423,7 +423,7 @@ CREATE TABLE calendar_events (
 ```sql
 CREATE TABLE scan_results (
     id VARCHAR PRIMARY KEY,
-    scan_job_id VARCHAR REFERENCES scan_jobs(id),
+    scan_job_id VARCHAR REFERENCES scans(id),
     object_id VARCHAR, -- ID from source system
     object_type VARCHAR, -- user, project, issue, etc.
     object_name VARCHAR, -- Display name
@@ -440,11 +440,11 @@ CREATE TABLE scan_results (
 **For ScanJob Table:**
 ```sql
 -- Add service-specific columns
-ALTER TABLE scan_jobs ADD COLUMN service_name VARCHAR(50);
-ALTER TABLE scan_jobs ADD COLUMN api_version VARCHAR(20);
-ALTER TABLE scan_jobs ADD COLUMN rate_limit_remaining INTEGER;
-ALTER TABLE scan_jobs ADD COLUMN priority_level VARCHAR(20) DEFAULT 'normal';
-ALTER TABLE scan_jobs ADD COLUMN max_retries INTEGER DEFAULT 3;
+ALTER TABLE scans ADD COLUMN service_name VARCHAR(50);
+ALTER TABLE scans ADD COLUMN api_version VARCHAR(20);
+ALTER TABLE scans ADD COLUMN rate_limit_remaining INTEGER;
+ALTER TABLE scans ADD COLUMN priority_level VARCHAR(20) DEFAULT 'normal';
+ALTER TABLE scans ADD COLUMN max_retries INTEGER DEFAULT 3;
 ```
 
 ---
@@ -460,16 +460,16 @@ ALTER TABLE scan_jobs ADD COLUMN max_retries INTEGER DEFAULT 3;
 ### Data Retention
 ```sql
 -- Archive completed scans older than 90 days
-CREATE TABLE scan_jobs_archive AS SELECT * FROM scan_jobs WHERE FALSE;
+CREATE TABLE scans_archive AS SELECT * FROM scans WHERE FALSE;
 
 -- Move old data
-INSERT INTO scan_jobs_archive 
-SELECT * FROM scan_jobs 
+INSERT INTO scans_archive 
+SELECT * FROM scans 
 WHERE status = 'completed' 
 AND completed_at < CURRENT_DATE - INTERVAL '90 days';
 
 -- Clean up
-DELETE FROM scan_jobs 
+DELETE FROM scans 
 WHERE status = 'completed' 
 AND completed_at < CURRENT_DATE - INTERVAL '90 days';
 ```
@@ -477,13 +477,13 @@ AND completed_at < CURRENT_DATE - INTERVAL '90 days';
 ### Large Result Sets
 ```sql
 -- Partition result table by scan_job_id for very large datasets
-CREATE TABLE [result_table] (
+CREATE TABLE results (
     -- columns as defined above
 ) PARTITION BY HASH (scan_job_id);
 
 -- Create partitions
-CREATE TABLE [result_table]_p0 PARTITION OF [result_table] FOR VALUES WITH (modulus 4, remainder 0);
-CREATE TABLE [result_table]_p1 PARTITION OF [result_table] FOR VALUES WITH (modulus 4, remainder 1);
+CREATE TABLE results_p0 PARTITION OF results FOR VALUES WITH (modulus 4, remainder 0);
+CREATE TABLE results_p1 PARTITION OF results FOR VALUES WITH (modulus 4, remainder 1);
 -- etc.
 ```
 
@@ -494,7 +494,7 @@ CREATE TABLE [result_table]_p1 PARTITION OF [result_table] FOR VALUES WITH (modu
 ### Constraints
 ```sql
 -- Ensure valid status values
-ALTER TABLE scan_jobs ADD CONSTRAINT check_valid_status 
+ALTER TABLE scans ADD CONSTRAINT check_valid_status 
 CHECK (status IN ('pending', 'running', 'completed', 'failed', 'cancelled'));
 
 -- Ensure valid priority levels
@@ -502,7 +502,7 @@ ALTER TABLE scan_controls ADD CONSTRAINT check_valid_priority
 CHECK (priority_level IN ('low', 'normal', 'high', 'urgent'));
 
 -- Ensure positive values
-ALTER TABLE scan_jobs ADD CONSTRAINT check_positive_counts 
+ALTER TABLE scans ADD CONSTRAINT check_positive_counts 
 CHECK (total_items >= 0 AND processed_items >= 0 AND failed_items >= 0);
 ```
 
@@ -517,8 +517,8 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
-CREATE TRIGGER update_scan_jobs_updated_at 
-    BEFORE UPDATE ON scan_jobs 
+CREATE TRIGGER update_scans_updated_at 
+    BEFORE UPDATE ON scans 
     FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 ```
 
@@ -543,5 +543,5 @@ CREATE TRIGGER update_scan_jobs_updated_at
 ---
 
 **Database Schema Version**: 1.0  
-**Last Updated**: [Current Date]  
+**Last Updated**: April 28, 2026
 **Compatible With**: PostgreSQL, MySQL, SQLite, SQL Server
