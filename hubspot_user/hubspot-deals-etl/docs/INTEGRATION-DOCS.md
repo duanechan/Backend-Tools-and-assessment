@@ -30,7 +30,7 @@ The Deals API Service integrates with HubSpot REST API endpoints to extract DEAL
 
 ### **Bearer Token Authentication**
 ```http
-Authorization: sampleaccesstoken
+Authorization: HubSpot_Sample_AccessToken
 Content-Type: application/json
 ```
 
@@ -44,80 +44,76 @@ Content-Type: application/json
 
 ### 🎯 **PRIMARY ENDPOINT (Required for Basic deal Extraction)**
 
-### 1. **Search Deals** - `/[api_path]/[primary_endpoint]` ✅ **REQUIRED**
+### 1. **Search Deals** - `/crm/v3/objects/deals` ✅ **REQUIRED**
 
-**Purpose**: Get paginated list of all [objects] - **THIS IS ALL YOU NEED FOR BASIC deal EXTRACTION**
+**Purpose**: Get paginated list of all deals - **THIS IS ALL YOU NEED FOR BASIC deal EXTRACTION**
 
 **Method**: `GET`
 
-**URL**: `https://{baseUrl}/[api_path]/[primary_endpoint]`
+**URL**: `https://api.hubapi.com/crm/v3/objects/deals`
 
 **Query Parameters**:
 ```
-?[param1]=[value]&[param2]=[value]&[param3]=[value]
+?limit=5&properties=amount&archived=false
 ```
 
 **Request Example**:
 ```http
-GET https://[your_instance].[platform_domain]/[api_path]/[primary_endpoint]?[param1]=[value]&[param2]=[value]
-[AUTH_HEADER]: [AUTH_VALUE]
+GET https://api.hubapi.com/crm/v3/objects/deals?limit=50&archived=false&properties=dealname,amount,closedate,dealstage
+Authorization: Bearer YOUR_ACCESS_TOKEN
 Content-Type: application/json
 ```
 
 **Response Structure** (Contains ALL essential deal data):
 ```json
 {
-  "[pagination_start]": 0,
-  "[pagination_size]": 50,
-  "[pagination_total]": 75,
-  "[pagination_last]": false,
-  "[data_array]": [
+  "results": [
     {
-      "[field_id]": "[sample_id]",
-      "[field_url]": "https://[your_instance].[platform_domain]/[api_path]/[primary_endpoint]/[sample_id]",
-      "[field_name]": "[Sample Object Name]",
-      "[field_type]": "[object_type]",
-      "[nested_object]": {
-        "[nested_field_1]": "[value_1]",
-        "[nested_field_2]": "[value_2]",
-        "[nested_field_3]": "[value_3]",
-        "[nested_field_4]": "[value_4]",
-        "[nested_field_5]": "[value_5]"
-      }
-    },
-    {
-      "[field_id]": "[sample_id_2]",
-      "[field_url]": "https://[your_instance].[platform_domain]/[api_path]/[primary_endpoint]/[sample_id_2]", 
-      "[field_name]": "[Another Sample Object]",
-      "[field_type]": "[object_type_2]",
-      "[nested_object]": {
-        "[nested_field_1]": "[value_1]",
-        "[nested_field_2]": "[value_2]",
-        "[nested_field_3]": "[value_3]",
-        "[nested_field_4]": "[value_4]",
-        "[nested_field_5]": "[value_5]"
-      }
+      "archived": false,
+      "createdAt": "2024-01-15T08:00:00Z",
+      "id": "123456789",
+      "properties": {
+        "dealname": "Acme Corp Enterprise Deal",
+        "amount": "15000.00",
+        "closedate": "2024-06-30T00:00:00Z",
+        "dealstage": "contractsent",
+        "pipeline": "default"
+      },
+      "updatedAt": "2024-03-10T12:45:00Z",
+      "archivedAt": null,
+      "associations": {
+        "contacts": { "results": [{ "id": "55001", "type": "deal_to_contact" }] },
+        "companies": { "results": [{ "id": "78901", "type": "deal_to_company" }] }
+      },
+      "propertiesWithHistory": {},
+      "url": "https://api.hubapi.com/crm/v3/objects/deals/123456789"
     }
-  ]
+  ],
+  "paging": {
+    "next": {
+      "after": "NTI1Cg%3D%3D",
+      "link": "?after=NTI1Cg%3D%3D"
+    }
+  }
 }
 ```
 
 **✅ This endpoint provides ALL the default deal fields:**
-- [Field 1], [Field 2], [Field 3]
-- [Field 4] URL
-- [Nested Object] with [Sub-field 1], [Sub-field 2], [Sub-field 3]
-- [Additional Field] and [Display Information]
-- [Reference Field] for [related data]
+- `id`, `createdAt`, `updatedAt`
+- `archivedAt`, `archived`, `url`
+- `properties` with `dealname`, `amount`, `closedate`, `dealstage`, `pipeline`
+- `associations` with linked `contacts` and `companies`
+- `propertiesWithHistory` for previous field values
 
-**Rate Limit**: [X] requests per [time period]
+**Rate Limit**: 100 requests per 10 seconds, 190 requests per 10 seconds (private app)
 
 ---
 
 ## 🔧 **OPTIONAL ENDPOINTS (Advanced Features Only)**
 
-> **⚠️ Note**: These endpoints are NOT required for basic deal extraction. Only implement if you need advanced deal analytics like [feature 1], [feature 2], or [feature 3].
+> **⚠️ Note**: These endpoints are NOT required for basic deal extraction. Only implement if you need advanced deal analytics like pipeline stage tracking, association mapping, or property history analysis.
 
-### 2. **Get deal Details** - `/[api_path]/[endpoint_1]/{objectId}` 🔧 **OPTIONAL**
+### 2. **Get deal details** - `/crm/v3/objects/deals/{dealId}` 🔧 **OPTIONAL**
 
 **Purpose**: Get detailed information for a specific deal
 
@@ -125,180 +121,92 @@ Content-Type: application/json
 
 **Method**: `GET`
 
-**URL**: `https://{baseUrl}/[api_path]/[endpoint_1]/{objectId}`
+**URL**: `https://api.hubapi.com/crm/v3/objects/deals/{dealId}`
 
 **Request Example**:
 ```http
-GET https://[your_instance].[platform_domain]/[api_path]/[endpoint_1]/[sample_id]
-[AUTH_HEADER]: [AUTH_VALUE]
+GET https://api.hubapi.com/crm/v3/objects/deals/123456789
+Authorization: Bearer YOUR_ACCESS_TOKEN
 Content-Type: application/json
 ```
 
 **Response Structure**:
 ```json
 {
-  "[field_id]": "[sample_id]",
-  "[field_url]": "https://[your_instance].[platform_domain]/[api_path]/[endpoint_1]/[sample_id]",
-  "[field_name]": "[Sample Object Name]",
-  "[field_type]": "[object_type]",
-  "[additional_field_1]": {
-    "[sub_field_1]": [
+  "id": "123456789",
+  "url": "https://api.hubapi.com/crm/v3/objects/deals/123456789",
+  "name": "Acme Corp Enterprise Deal",
+  "type": "deal",
+  "propertiesWithHistory": {
+    "dealstage": [
       {
-        "[property_1]": "[value_1]",
-        "[property_2]": "[value_2]",
-        "[property_3]": true
+        "value": "contractsent",
+        "timestamp": "2024-03-01T00:00:00Z",
+        "sourceType": "CRM_UI"
       }
     ],
-    "[sub_field_2]": [
+    "amount": [
       {
-        "[property_4]": "[value_4]",
-        "[property_5]": "[value_5]"
+        "value": "15000.00",
+        "timestamp": "2024-01-15T00:00:00Z",
+        "sourceType": "API"
       }
     ]
   },
-  "[nested_object]": {
-    "[nested_field_1]": "[value_1]",
-    "[nested_field_2]": "[value_2]",
-    "[nested_field_3]": "[value_3]",
-    "[nested_field_4]": "[value_4]",
-    "[nested_field_5]": "[value_5]"
+  "properties": {
+    "dealname": "Acme Corp Enterprise Deal",
+    "amount": "15000.00",
+    "closedate": "2024-06-30T00:00:00Z",
+    "dealstage": "contractsent",
+    "pipeline": "default"
   },
-  "[boolean_field_1]": true,
-  "[boolean_field_2]": false,
-  "[boolean_field_3]": false
+  "archived": false,
+  "archivedAt": null,
+  "createdAt": "2024-01-15T08:00:00Z"
 }
 ```
 
 ---
 
-### 3. **Get deal [Related Data]** - `/[api_path]/[endpoint_2]/{objectId}/[related_endpoint]` 🔧 **OPTIONAL**
+### 3. **Get deal associations** - `/crm/v3/objects/deals/{dealId}/associations/{toObjectType}` 🔧 **OPTIONAL**
 
-**Purpose**: Get [related data] associated with a deal
+**Purpose**: Get contacts, companies, or other objects associated with a deal
 
-**When to use**: Only if you need [related data] analysis and [specific metrics]
+**When to use**: Only if you need association mapping and relationship analysis
 
 **Method**: `GET`
 
-**URL**: `https://{baseUrl}/[api_path]/[endpoint_2]/{objectId}/[related_endpoint]`
+**URL**: `https://api.hubapi.com/crm/v3/objects/deals/{dealId}/associations/{toObjectType}`
 
 **Query Parameters**:
 ```
-?[param1]=[value]&[param2]=[value]&[filter_param]=[filter_value]
+?limit=50&after=NTI1Cg%3D%3D
 ```
 
 **Request Example**:
 ```http
-GET https://[your_instance].[platform_domain]/[api_path]/[endpoint_2]/[sample_id]/[related_endpoint]?[param2]=[value]
-[AUTH_HEADER]: [AUTH_VALUE]
+GET https://api.hubapi.com/crm/v3/objects/deals/123456789/associations/contacts?limit=50
+Authorization: Bearer YOUR_ACCESS_TOKEN
 Content-Type: application/json
 ```
 
 **Response Structure**:
 ```json
 {
-  "[pagination_start]": 0,
-  "[pagination_size]": 50,
-  "[pagination_total]": 25,
-  "[pagination_last]": false,
-  "[data_array]": [
+  "results": [
     {
-      "[related_id]": 1,
-      "[related_url]": "https://[your_instance].[platform_domain]/[api_path]/[related_endpoint]/1",
-      "[related_status]": "[status_1]",
-      "[related_name]": "[Related Item 1]",
-      "[date_start]": "[date_format]",
-      "[date_end]": "[date_format]",
-      "[date_complete]": "[date_format]",
-      "[date_created]": "[date_format]",
-      "[origin_field]": "[sample_id]",
-      "[description_field]": "[Description text]"
+      "id": "55001",
+      "type": "deal_to_contact"
     },
     {
-      "[related_id]": 2,
-      "[related_url]": "https://[your_instance].[platform_domain]/[api_path]/[related_endpoint]/2",
-      "[related_status]": "[status_2]", 
-      "[related_name]": "[Related Item 2]",
-      "[date_start]": "[date_format]",
-      "[date_end]": "[date_format]",
-      "[date_created]": "[date_format]",
-      "[origin_field]": "[sample_id]",
-      "[description_field]": "[Description text]"
+      "id": "55002",
+      "type": "deal_to_contact"
     }
-  ]
-}
-```
-
----
-
-### 4. **Get deal Configuration** - `/[api_path]/[endpoint_3]/{objectId}/[config_endpoint]` 🔧 **OPTIONAL**
-
-**Purpose**: Get deal configuration details ([config_type_1], [config_type_2], [config_type_3])
-
-**When to use**: Only if you need [workflow type] and deal setup analysis
-
-**Method**: `GET`
-
-**URL**: `https://{baseUrl}/[api_path]/[endpoint_3]/{objectId}/[config_endpoint]`
-
-**Request Example**:
-```http
-GET https://[your_instance].[platform_domain]/[api_path]/[endpoint_3]/[sample_id]/[config_endpoint]
-[AUTH_HEADER]: [AUTH_VALUE]
-Content-Type: application/json
-```
-
-**Response Structure**:
-```json
-{
-  "[field_id]": "[sample_id]",
-  "[field_name]": "[Sample Object Name]",
-  "[field_type]": "[object_type]",
-  "[field_url]": "https://[your_instance].[platform_domain]/[api_path]/[endpoint_3]/[sample_id]/[config_endpoint]",
-  "[location_field]": {
-    "[location_type]": "[location_value]",
-    "[location_identifier]": "[identifier]"
-  },
-  "[filter_field]": {
-    "[filter_id]": "[filter_value]",
-    "[filter_url]": "https://[your_instance].[platform_domain]/[api_path]/[filter_endpoint]/[filter_value]"
-  },
-  "[config_object]": {
-    "[config_array]": [
-      {
-        "[config_name]": "[Config Item 1]",
-        "[config_values]": [
-          {
-            "[config_id]": "[id_1]",
-            "[config_url]": "https://[your_instance].[platform_domain]/[api_path]/[status_endpoint]/[id_1]"
-          }
-        ]
-      },
-      {
-        "[config_name]": "[Config Item 2]",
-        "[config_values]": [
-          {
-            "[config_id]": "[id_2]",
-            "[config_url]": "https://[your_instance].[platform_domain]/[api_path]/[status_endpoint]/[id_2]"
-          }
-        ]
-      },
-      {
-        "[config_name]": "[Config Item 3]",
-        "[config_values]": [
-          {
-            "[config_id]": "[id_3]",
-            "[config_url]": "https://[your_instance].[platform_domain]/[api_path]/[status_endpoint]/[id_3]"
-          }
-        ]
-      }
-    ],
-    "[constraint_type]": "[constraint_value]"
-  },
-  "[estimation_field]": {
-    "[estimation_type]": "[estimation_value]",
-    "[estimation_details]": {
-      "[detail_id]": "[detail_value]",
-      "[detail_name]": "[Detail Display Name]"
+  ],
+  "paging": {
+    "next": {
+      "after": "NTI1Cg%3D%3D",
+      "link": "?after=NTI1Cg%3D%3D"
     }
   }
 }
@@ -306,61 +214,96 @@ Content-Type: application/json
 
 ---
 
-### 5. **Get deal [Additional Data]** - `/[api_path]/[endpoint_4]/{objectId}/[additional_endpoint]` 🔧 **OPTIONAL**
+### 4. **Get deal Configuration** - `/crm/v3/objects/deals/{dealId}?properties` 🔧 **OPTIONAL**
 
-**Purpose**: Get [additional data] for a deal
+**Purpose**: Get deal configuration details (`dealname`, `amount`, `closedate`, etc.)
 
-**When to use**: Only if you need [additional data] analysis and [specific functionality]
+**When to use**: Only if you need to limit the response payload to specific fields
 
 **Method**: `GET`
 
-**URL**: `https://{baseUrl}/[api_path]/[endpoint_4]/{objectId}/[additional_endpoint]`
-
-**Query Parameters**:
-```
-?[param1]=[value]&[param2]=[value]&[query_param]=[query_value]&[validation_param]=[validation_value]&[fields_param]=[field1],[field2],[field3],[field4]
-```
+**URL**: `https://api.hubapi.com/crm/v3/objects/deals/{dealId}?properties=dealname,amount,closedate,dealstage,pipeline`
 
 **Request Example**:
 ```http
-GET https://[your_instance].[platform_domain]/[api_path]/[endpoint_4]/[sample_id]/[additional_endpoint]?[param2]=[value]
-[AUTH_HEADER]: [AUTH_VALUE]
+GET https://api.hubapi.com/crm/v3/objects/deals/123456789?properties=dealname,amount,closedate,dealstage,pipeline
+Authorization: Bearer YOUR_ACCESS_TOKEN
 Content-Type: application/json
 ```
 
 **Response Structure**:
 ```json
 {
-  "[pagination_start]": 0,
-  "[pagination_size]": 50,
-  "[pagination_total]": 120,
-  "[data_key]": [
+  "id": "123456789",
+  "properties": {
+    "dealname": "Acme Corp Enterprise Deal",
+    "amount": "15000.00",
+    "closedate": "2024-06-30T00:00:00Z",
+    "dealstage": "contractsent",
+    "pipeline": "default"
+  },
+  "createdAt": "2024-01-15T08:00:00Z",
+  "updatedAt": "2024-03-10T12:45:00Z",
+  "archived": false,
+  "archivedAt": null
+}
+```
+
+---
+
+### 5. **Get deal line items** - `/crm/v3/objects/deals/{dealId}/associations/line_items` 🔧 **OPTIONAL**
+
+**Purpose**: Get line items associated with a deal
+
+**When to use**: Only if you need line item analysis and product-level reporting
+
+**Method**: `GET`
+
+**URL**: `https://api.hubapi.com/crm/v3/objects/deals/{dealId}/associations/line_items`
+
+**Query Parameters**:
+```
+?limit=50&after=NTI1Cg%3D%3D&properties=name,price,quantity,amount,hs_sku&archived=false
+```
+
+**Request Example**:
+```http
+GET https://api.hubapi.com/crm/v3/objects/deals/123456789?associations=line_item&limit=50
+Authorization: Bearer YOUR_ACCESS_TOKEN
+Content-Type: application/json
+```
+
+**Response Structure**:
+```json
+{
+  "results": [
     {
-      "[item_id]": "[item_id_value]",
-      "[item_key]": "[ITEM-123]",
-      "[item_url]": "https://[your_instance].[platform_domain]/[api_path]/[item_endpoint]/[item_id_value]",
-      "[item_fields]": {
-        "[summary_field]": "[Item summary text]",
-        "[status_field]": {
-          "[status_id]": "[status_id_value]",
-          "[status_name]": "[Status Name]",
-          "[status_category]": {
-            "[category_id]": 2,
-            "[category_key]": "[category_key]",
-            "[category_color]": "[color-name]"
-          }
-        },
-        "[assignee_field]": {
-          "[assignee_id]": "[assignee_account_id]",
-          "[assignee_name]": "[Assignee Name]"
-        },
-        "[priority_field]": {
-          "[priority_id]": "[priority_id_value]",
-          "[priority_name]": "[Priority Level]"
-        }
-      }
+      "archived": false,
+      "createdAt": "2024-01-15T08:00:00Z",
+      "id": "LI-001",
+      "properties": {
+        "name": "Enterprise License",
+        "price": "3000.00",
+        "quantity": "5",
+        "amount": "15000.00",
+        "hs_sku": "ENT-LIC-001"
+      },
+      "updatedAt": "2024-03-10T12:45:00Z",
+      "archivedAt": null,
+      "associations": {
+        "deals": { "results": [{ "id": "123456789", "type": "line_item_to_deal" }] }
+      },
+      "objectWriteTraceId": "xyz789trace",
+      "propertiesWithHistory": {},
+      "url": "https://api.hubapi.com/crm/v3/objects/line_items/LI-001"
     }
-  ]
+  ],
+  "paging": {
+    "next": {
+      "after": "NTI1Cg%3D%3D",
+      "link": "?after=NTI1Cg%3D%3D"
+    }
+  }
 }
 ```
 
@@ -370,7 +313,7 @@ Content-Type: application/json
 
 ### 🎯 **SIMPLE FLOW (Recommended - Using Only Required Endpoint)**
 
-### **Single Endpoint Approach - `/[primary_endpoint]` Only**
+### **Single Endpoint Approach - `/crm/v3/objects/deals` Only**
 ```python
 def extract_all_objects_simple():
     """Extract all [objects] using only the /[primary_endpoint] endpoint"""
