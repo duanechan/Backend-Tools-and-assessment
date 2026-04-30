@@ -11,7 +11,7 @@ The Deals API Service integrates with HubSpot REST API endpoints to extract Deal
 ### ✅ **Required Endpoint (Essential)**
 | **API Endpoint**                    | **Purpose**                          | **Version** | **Required Permissions** | **Usage**    |
 |-------------------------------------|--------------------------------------|-------------|--------------------------|--------------|
-| `/crm/v3/objects/deals/search`    | Search and list deals           | `v3` | `crm.objects.deals.read`      | **Required** |
+| `/crm/v3/objects/deals`    | Search and list deals           | `v3` | `crm.objects.deals.read`      | **Required** |
 
 ### 🔧 **Optional Endpoints (Advanced Features)**
 | **API Endpoint**                    | **Purpose**                          | **Version** | **Required Permissions** | **Usage**    |
