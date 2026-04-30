@@ -49,24 +49,33 @@ CREATE INDEX idx_scan_org_status ON scans(organization_id, status);
 
 ---
 
-### 2. Results Table (Completely Customizable)
+### 2. Results Table
 
 **Purpose**: Store scan results and extracted data - **CUSTOMIZE FIELDS FOR YOUR DATA TYPE**
 
-| **Column Name**         | **Type**    | **Constraints**           | **Description**                          |
-|-------------------------|-------------|---------------------------|------------------------------------------|
-| `id`                    | String      | PRIMARY KEY               | Unique result identifier                 |
-| `scan_job_id`           | String      | FOREIGN KEY, NOT NULL     | Reference to scans.id               |
-| `[custom_field_1]`      | String/JSON | CUSTOMIZABLE              | **Replace with your data fields**       |
-| `[custom_field_2]`      | String/JSON | CUSTOMIZABLE              | **Replace with your data fields**       |
-| `[custom_field_3]`      | String/JSON | CUSTOMIZABLE              | **Replace with your data fields**       |
-| `[custom_field_4]`      | String/JSON | CUSTOMIZABLE              | **Replace with your data fields**       |
-| `[custom_field_5]`      | String/JSON | CUSTOMIZABLE              | **Replace with your data fields**       |
-| `[custom_field_n]`      | String/JSON | CUSTOMIZABLE              | **Add as many fields as needed**        |
-| `created_at`            | DateTime    | NOT NULL                  | Record creation timestamp               |
-| `updated_at`            | DateTime    | NOT NULL                  | Record last update timestamp            |
+| **Column Name**             | **Type**    | **Constraints**           | **Description**                          |
+|-----------------------------|-------------|---------------------------|------------------------------------------|
+| `id`                        | String      | PRIMARY KEY               | Unique result identifier                 |
+| `scan_job_id`               | String      | FOREIGN KEY, NOT NULL     | Reference to scans.id                    |
+| `hs_object_id`              | String      | NOT NULL                  | HubSpot deal record ID                   |
+| `dealname`                  | String      | NOT NULL                  | Name of the deal                         |
+| `amount`                    | Decimal     | NULLABLE                  | Deal amount                              |
+| `dealstage`                 | String      | NULLABLE                  | Current stage in the pipeline            |
+| `pipeline`                  | String      | NULLABLE                  | Pipeline the deal belongs to             |
+| `closedate`                 | DateTime    | NULLABLE                  | Expected or actual close date            |
+| `hubspot_owner_id`          | String      | NULLABLE                  | Owner of the deal                        |
+| `dealtype`                  | String      | NULLABLE                  | Deal type (e.g., new business, existing) |
+| `hs_is_closed`              | Boolean     | NULLABLE                  | Whether the deal is closed               |
+| `hs_is_closed_won`          | Boolean     | NULLABLE                  | Whether the deal closed as won           |
+| `hs_deal_stage_probability` | Decimal     | NULLABLE                  | Probability of closing                   |
+| `hs_priority`               | String      | NULLABLE                  | Deal priority                            |
+| `hs_createdate`             | DateTime    | NULLABLE                  | When the deal was created in HubSpot     |
+| `hs_lastmodifieddate`       | DateTime    | INDEXED                   | Last modification time                   |
+| `archived`                  | Boolean     | NOT NULL, DEFAULT FALSE   | Whether the deal is archived in HubSpot  |
+| `created_at`                | DateTime    | NOT NULL                  | Record creation timestamp                |
+| `updated_at`                | DateTime    | NOT NULL                  | Record last update timestamp             |
 
-**🎯 EXAMPLES - Replace with YOUR custom fields:**
+**🎯 EXAMPLES**
 
 **For User Extraction:**
 ```sql
@@ -134,15 +143,15 @@ CREATE TABLE scan_results (
 );
 ```
 
-**Indexes (Customize based on your fields):**
+**Indexes**
 ```sql
 -- Basic performance indexes
 CREATE INDEX idx_result_scan_job ON results(scan_job_id);
 
 -- CUSTOMIZE THESE based on your actual fields:
-CREATE INDEX idx_result_custom_field ON results([your_main_id_field]);
-CREATE INDEX idx_result_search ON results([your_searchable_field]);
-CREATE INDEX idx_result_filter ON results([your_filter_field]);
+CREATE INDEX idx_result_hs_object ON results(hs_object_id);
+CREATE INDEX idx_result_dealname ON results(dealname);
+CREATE INDEX idx_result_dealstage ON results(dealstage);
 
 -- Examples for different data types:
 -- For users: CREATE INDEX idx_user_email ON user_results(email);
@@ -543,5 +552,5 @@ CREATE TRIGGER update_scans_updated_at
 ---
 
 **Database Schema Version**: 1.0  
-**Last Updated**: April 28, 2026
+**Last Updated**: April 30, 2026
 **Compatible With**: PostgreSQL, MySQL, SQLite, SQL Server
