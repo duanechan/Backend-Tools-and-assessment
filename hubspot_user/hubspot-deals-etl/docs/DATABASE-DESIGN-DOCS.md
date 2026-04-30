@@ -19,24 +19,46 @@ The Scan Job database schema consists of two main tables:
 
 **Purpose**: Core scan job management and status tracking
 
-| **Column Name**         | **Type**    | **Constraints**           | **Description**                          |
-|-------------------------|-------------|---------------------------|------------------------------------------|
-| `id`                    | String      | PRIMARY KEY               | Unique internal identifier               |
-| `scan_id`               | String      | UNIQUE, NOT NULL, INDEX   | External scan identifier                 |
+| **Column Name**         | **Type**    | **Constraints**           | **Description**                                |
+|-------------------------|-------------|---------------------------|------------------------------------------------|
+| `id`                    | String      | PRIMARY KEY               | Unique internal identifier                     |
+| `scan_id`               | String      | UNIQUE, NOT NULL, INDEX   | External scan identifier                       |
 | `status`                | String      | NOT NULL, INDEX           | pending, running, completed, failed, cancelled |
-| `scan_type`             | String      | NOT NULL                  | Type of scan (user, project, calendar, etc.) |
-| `config`                | JSON        | NOT NULL                  | Scan configuration and parameters        |
-| `organization_id`       | String      | NULLABLE                  | Organization/tenant identifier           |
-| `error_message`         | Text        | NULLABLE                  | Error details if scan failed            |
-| `started_at`            | DateTime    | NULLABLE                  | When scan execution started             |
-| `completed_at`          | DateTime    | NULLABLE                  | When scan finished                      |
-| `total_items`           | Integer     | DEFAULT 0                 | Total items to process                  |
-| `processed_items`       | Integer     | DEFAULT 0                 | Items successfully processed            |
-| `failed_items`          | Integer     | DEFAULT 0                 | Items that failed processing            |
-| `success_rate`          | String      | NULLABLE                  | Calculated success percentage           |
-| `batch_size`            | Integer     | DEFAULT 50                | Processing batch size                   |
-| `created_at`            | DateTime    | NOT NULL                  | Record creation timestamp               |
-| `updated_at`            | DateTime    | NOT NULL                  | Record last update timestamp            |
+| `scan_type`             | String      | NOT NULL                  | Type of scan (user, project, calendar, etc.)   |
+| `config`                | JSON        | NOT NULL                  | Scan configuration and parameters              |
+| `organization_id`       | String      | NULLABLE                  | Organization/tenant identifier                 |
+| `error_message`         | Text        | NULLABLE                  | Error details if scan failed                   |
+| `started_at`            | DateTime    | NULLABLE                  | When scan execution started                    |
+| `completed_at`          | DateTime    | NULLABLE                  | When scan finished                             |
+| `total_items`           | Integer     | DEFAULT 0                 | Total items to process                         |
+| `processed_items`       | Integer     | DEFAULT 0                 | Items successfully processed                   |
+| `failed_items`          | Integer     | DEFAULT 0                 | Items that failed processing                   |
+| `success_rate`          | String      | NULLABLE                  | Calculated success percentage                  |
+| `batch_size`            | Integer     | DEFAULT 50                | Processing batch size                          |
+| `created_at`            | DateTime    | NOT NULL                  | Record creation timestamp                      |
+| `updated_at`            | DateTime    | NOT NULL                  | Record last update timestamp                   |
+
+**SQL Definition:**
+```sql
+CREATE TABLE scans (
+    id VARCHAR PRIMARY KEY,
+    scan_id VARCHAR UNIQUE NOT NULL,
+    status VARCHAR NOT NULL,
+    scan_type VARCHAR NOT NULL,
+    config JSON NOT NULL,
+    organization_id VARCHAR,
+    error_message TEXT,
+    started_at TIMESTAMP,
+    completed_at TIMESTAMP,
+    total_items INTEGER DEFAULT 0,
+    processed_items INTEGER DEFAULT 0,
+    failed_items INTEGER DEFAULT 0,
+    success_rate VARCHAR,
+    batch_size INTEGER DEFAULT 50,
+    created_at TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP NOT NULL
+);
+```
 
 **Indexes:**
 ```sql
@@ -74,6 +96,31 @@ CREATE INDEX idx_scan_org_status ON scans(organization_id, status);
 | `archived`                  | Boolean     | NOT NULL, DEFAULT FALSE   | Whether the deal is archived in HubSpot  |
 | `created_at`                | DateTime    | NOT NULL                  | Record creation timestamp                |
 | `updated_at`                | DateTime    | NOT NULL                  | Record last update timestamp             |
+
+**SQL Definition:**
+```sql
+CREATE TABLE results (
+    id VARCHAR PRIMARY KEY,
+    scan_job_id VARCHAR NOT NULL REFERENCES scans(id) ON DELETE CASCADE,
+    hs_object_id VARCHAR NOT NULL,
+    dealname VARCHAR NOT NULL,
+    amount DECIMAL,
+    dealstage VARCHAR,
+    pipeline VARCHAR,
+    closedate TIMESTAMP,
+    hubspot_owner_id VARCHAR,
+    dealtype VARCHAR,
+    hs_is_closed BOOLEAN,
+    hs_is_closed_won BOOLEAN,
+    hs_deal_stage_probability DECIMAL,
+    hs_priority VARCHAR,
+    hs_createdate TIMESTAMP,
+    hs_lastmodifieddate TIMESTAMP,
+    archived BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP NOT NULL
+);
+```
 
 **🎯 EXAMPLES**
 
