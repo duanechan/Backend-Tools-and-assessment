@@ -1,4 +1,4 @@
-# [Service Name] - API Documentation
+# Deals Service - API Documentation
 
 ## 📋 Table of Contents
 1. [Overview](#overview)
@@ -14,34 +14,31 @@
 
 ## 🔍 Overview
 
-[Brief description of what your service does and its main purpose]
+Deals Service is a RESTful API that extracts, manages, and serves deal data from HubSpot CRM.
 
 ### API Version
-- **Version**: [e.g., 1.0.0]
-- **Base Path**: [e.g., `/api/v1`]
+- **Version**: `v1`
+- **Base Path**: `/api/v1`
 - **Content Type**: `application/json`
 - **Documentation**: Available at `/docs` (Swagger UI)
 
 ### Key Features
-- **[Feature 1]**: [Description]
-- **[Feature 2]**: [Description]
-- **[Feature 3]**: [Description]
-- **[Feature 4]**: [Description]
-- **[Feature 5]**: [Description]
+- **Deal Extraction**: Fetches and paginates deal records from HubSpot CRM via the `/crm/v3/objects/deals` endpoint
+- **Scan Job Management**: Tracks extraction jobs with status, progress, and error reporting via a `scans` table
+- **Result Persistance**: Stores extracted deal data (name, amount, stage, pipeline, close date, etc.) in a structured `results` table
+- **Association Support**: Optionally retrieves deal relationships to contacts, companies, and line items
+- **Rate Limit Handling**: Respects HubSpot's API limits with retry/backoff support
 
 ## 🔐 Authentication
 
-[Describe your authentication method - OAuth, API Keys, JWT, etc.]
+Deals Service authenticates with HubSpot using a **Bearer token** (Private App Access Token). Include the token in the `Authorization` header of every request along with `Content-Type: application/json`.
 
 ### Required Credentials
-- **[Credential 1]**: [Description]
-- **[Credential 2]**: [Description]
-- **[Credential 3]**: [Description]
+- **HubSpot Access Token**: Private App Access Token used as the Bearer token in the `Authorization` header
+- **Content-Type**: Must be set to `application/json` on all requests
 
 ### Required Permissions
-- `[Permission 1]` - [Description]
-- `[Permission 2]` - [Description]
-- `[Permission 3]` - [Description]
+- `crm.objects.deals.read` - Fetch, search, and list deal records
 
 ### Authentication Headers
 ```
@@ -53,22 +50,22 @@ Content-Type: application/json
 
 ### Development
 ```
-http://localhost:[PORT]
+http://localhost:8080/api/v1
 ```
 
 ### Staging
 ```
-https://staging-api.your-domain.com
+https://staging-api.your-domain.com/api/v1
 ```
 
 ### Production
 ```
-https://api.your-domain.com
+https://api.your-domain.com/api/v1
 ```
 
 ### Swagger Documentation
 ```
-http://localhost:[PORT]/docs
+http://localhost:8080/docs
 ```
 
 ## 📊 Common Response Formats
@@ -128,27 +125,17 @@ http://localhost:[PORT]/docs
 
 **POST** `/scan/start`
 
-Initiates a new calendar extraction process for the specified environment.
+Initiates a new deal extraction process for the specified environment.
 
 #### Request Body
 ```json
 {
   "config": {
     "scanId": "unique-scan-identifier",
-    "type": ["calendar"],
+    "type": ["deals"],
     "auth": {
-      "[auth_key_1]": "[auth_value_1]",
-      "[auth_key_2]": "[auth_value_2]",
-      "[auth_key_n]": "[auth_value_n]"
-    },
-    "dateRange": {
-      "startDate": "2024-01-01",
-      "endDate": "2024-12-31"
-    },
-    "user_upns": [
-      "user1@company.com",
-      "user2@company.com"
-    ]
+      "access_token": "<hubspot_private_app_access_token>"
+    }
   }
 }
 ```
@@ -157,16 +144,15 @@ Initiates a new calendar extraction process for the specified environment.
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `config.scanId` | string | Yes | Unique identifier for the scan (alphanumeric, hyphens, underscores only, max 255 chars) |
-| `config.type` | array | Yes | Service types to scan (must include "calendar") |
-| `config.auth.[auth_keys]` | string | Yes | Authentication credentials (service-specific keys and values) |
+| `config.type` | array | Yes | Service types to scan (must include "deal") |
+| `config.auth.access_token` | string | Yes | HubSpot Private App Access Token |
 | `config.dateRange.startDate` | string | Yes | Start date (YYYY-MM-DD format) |
 | `config.dateRange.endDate` | string | Yes | End date (YYYY-MM-DD format) |
-| `config.user_upns` | array | No | List of user emails to extract (optional) |
 
 #### Response
 ```json
 {
-  "message": "Calendar extraction started",
+  "message": "Deal extraction started",
   "scanId": "unique-scan-identifier",
   "status": "started"
 }
@@ -203,11 +189,9 @@ Retrieves the current status of an extraction process.
   "created_at": "2024-01-15T10:30:00Z",
   "updated_at": "2024-01-15T10:35:00Z",
   "progress": {
-    "total_users": 10,
-    "completed_users": 6,
-    "total_events_extracted": 245,
-    "failed_users": 1,
-    "successful_users": 5
+    "total_deals": 500,
+    "deals_extracted": 200,
+    "failed_deals": 3
   }
 }
 ```
@@ -538,16 +522,16 @@ Returned for input validation failures:
 
 ### Common Error Codes
 
-| Code | Description |
-|------|-------------|
-| `VALIDATION_ERROR` | Input validation failed |
-| `UNAUTHORIZED` | Authentication required |
-| `FORBIDDEN` | Insufficient permissions |
-| `NOT_FOUND` | Resource not found |
-| `CONFLICT` | Resource already exists |
-| `RATE_LIMIT_EXCEEDED` | Too many requests |
-| `INTERNAL_ERROR` | Server error |
-| `SERVICE_UNAVAILABLE` | Service temporarily unavailable |
+| Code                        | Description                     |
+|-----------------------------|---------------------------------|
+| `VALIDATION_ERROR`          | Input validation failed         |
+| `UNAUTHORIZED`              | Authentication required         |
+| `FORBIDDEN`                 | Insufficient permissions        |
+| `NOT_FOUND`                 | Resource not found              |
+| `CONFLICT`                  | Resource already exists         |
+| `RATE_LIMIT_EXCEEDED`       | Too many requests               |
+| `INTERNAL_ERROR`            | Server error                    |
+| `SERVICE_UNAVAILABLE`       | Service temporarily unavailable |
 
 ---
 
@@ -561,57 +545,48 @@ curl -X POST "https://api.your-domain.com/scan/start" \
   -H "Content-Type: application/json" \
   -d '{
     "config": {
-      "scanId": "weekly-sync-001",
-      "type": ["calendar"],
+      "scanId": "deals-sync-001",
+      "type": ["deals"],
       "auth": {
-        "[auth_key_1]": "[auth_value_1]",
-        "[auth_key_2]": "[auth_value_2]"
-      },
-      "dateRange": {
-        "startDate": "2024-01-01",
-        "endDate": "2024-01-31"
-      },
-      "user_upns": [
-        "alice@company.com",
-        "bob@company.com"
-      ]
+        "access_token": "pat-na1-..."
+      }
     }
   }'
 ```
 
 #### 2. Monitor Progress
 ```bash
-curl "https://api.your-domain.com/scan/status/weekly-sync-001"
+curl "https://api.your-domain.com/scan/status/deals-sync-001"
 ```
 
 #### 3. Get Results
 ```bash
-curl "https://api.your-domain.com/scan/result/weekly-sync-001?page=1&page_size=50"
+curl "https://api.your-domain.com/scan/result/deals-sync-001?page=1&page_size=50"
 ```
 
 #### 4. Download Results
 ```bash
 # Download as CSV
-curl "https://api.your-domain.com/scan/download/weekly-sync-001/csv" \
-  -o "calendar_results.csv"
+curl "https://api.your-domain.com/scan/download/deals-sync-001/csv" \
+  -o "deals_results.csv"
 
 # Download as Excel
-curl "https://api.your-domain.com/scan/download/weekly-sync-001/excel" \
-  -o "calendar_results.xlsx"
+curl "https://api.your-domain.com/scan/download/deals-sync-001/excel" \
+  -o "deals_results.xlsx"
 
 # Download as JSON
-curl "https://api.your-domain.com/scan/download/weekly-sync-001/json" \
-  -o "calendar_results.json"
+curl "https://api.your-domain.com/scan/download/deals-sync-001/json" \
+  -o "deals_results.json"
 ```
 
 #### 5. Cancel Extraction (if needed)
 ```bash
-curl -X POST "https://api.your-domain.com/scan/cancel/weekly-sync-001"
+curl -X POST "https://api.your-domain.com/scan/cancel/deals-sync-001"
 ```
 
 #### 6. Remove Extraction (cleanup)
 ```bash
-curl -X DELETE "https://api.your-domain.com/scan/remove/weekly-sync-001"
+curl -X DELETE "https://api.your-domain.com/scan/remove/deals-sync-001"
 ```
 
 ### PowerShell Examples
@@ -620,17 +595,11 @@ curl -X DELETE "https://api.your-domain.com/scan/remove/weekly-sync-001"
 ```powershell
 $body = @{
   config = @{
-    scanId = "powershell-test-001"
-    type = @("calendar")
+    scanId = "deals-sync-001"
+    type = @("deals")
     auth = @{
-      "[auth_key_1]" = "[auth_value_1]"
-      "[auth_key_2]" = "[auth_value_2]"
+      access_token = "pat-na1-..."
     }
-    dateRange = @{
-      startDate = "2024-01-01"
-      endDate = "2024-01-31"
-    }
-    user_upns = @("user@company.com")
   }
 } | ConvertTo-Json -Depth 10
 
@@ -639,16 +608,16 @@ Invoke-RestMethod -Uri "https://api.your-domain.com/scan/start" -Method Post -Bo
 
 #### Get Status
 ```powershell
-Invoke-RestMethod -Uri "https://api.your-domain.com/scan/status/powershell-test-001"
+Invoke-RestMethod -Uri "https://api.your-domain.com/scan/status/deals-sync-001"
 ```
 
 #### Download Results
 ```powershell
 # Download Excel file
-Invoke-WebRequest -Uri "https://api.your-domain.com/scan/download/powershell-test-001/excel" -OutFile "results.xlsx"
+Invoke-WebRequest -Uri "https://api.your-domain.com/scan/download/deals-sync-001/excel" -OutFile "results.xlsx"
 
 # Download CSV file
-Invoke-WebRequest -Uri "https://api.your-domain.com/scan/download/powershell-test-001/csv" -OutFile "results.csv"
+Invoke-WebRequest -Uri "https://api.your-domain.com/scan/download/deals-sync-001/csv" -OutFile "results.csv"
 ```
 
 ### Python Examples
@@ -660,17 +629,11 @@ import requests
 url = "https://api.your-domain.com/scan/start"
 payload = {
     "config": {
-        "scanId": "python-test-001",
-        "type": ["calendar"],
+        "scanId": "deals-sync-001",
+        "type": ["deals"],
         "auth": {
-            "[auth_key_1]": "[auth_value_1]",
-            "[auth_key_2]": "[auth_value_2]"
-        },
-        "dateRange": {
-            "startDate": "2024-01-01",
-            "endDate": "2024-01-31"
-        },
-        "user_upns": ["user@company.com"]
+            "access_token": "pat-na1-..."
+        }
     }
 }
 
@@ -683,18 +646,21 @@ print(response.json())
 import requests
 import time
 
-scan_id = "python-test-001"
+scan_id = "deals-sync-001"
 url = f"https://api.your-domain.com/scan/status/{scan_id}"
 
 while True:
     response = requests.get(url)
     status = response.json()
-    
+
     print(f"Status: {status['status']}")
-    
-    if status['status'] in ['completed', 'failed', 'cancelled', 'not_found']:
+    if status.get("progress"):
+        p = status["progress"]
+        print(f"  Extracted: {p['deals_extracted']} / {p['total_deals']} ({p['failed_deals']} failed)")
+
+    if status["status"] in ["completed", "failed", "cancelled", "not_found"]:
         break
-    
+
     time.sleep(10)  # Check every 10 seconds
 ```
 
@@ -702,44 +668,43 @@ while True:
 ```python
 import requests
 
-scan_id = "python-test-001"
+scan_id = "deals-sync-001"
 page = 1
-all_events = []
+all_deals = []
 
 while True:
     url = f"https://api.your-domain.com/scan/result/{scan_id}?page={page}&page_size=100"
     response = requests.get(url)
-    
+
     if response.status_code == 200:
         data = response.json()
-        all_events.extend(data['data'])
-        
-        if not data['pagination']['has_next']:
+        all_deals.extend(data["data"])
+
+        if not data["pagination"]["has_next"]:
             break
-        
+
         page += 1
     else:
         print(f"Error: {response.status_code}")
         break
 
-print(f"Total events retrieved: {len(all_events)}")
+print(f"Total deals retrieved: {len(all_deals)}")
 ```
 
 #### Download Results
 ```python
 import requests
 
-scan_id = "python-test-001"
+scan_id = "deals-sync-001"
 
-# Download different formats
-formats = ['json', 'csv', 'excel']
+formats = ["json", "csv", "excel"]
 for fmt in formats:
     url = f"https://api.your-domain.com/scan/download/{scan_id}/{fmt}"
     response = requests.get(url)
-    
+
     if response.status_code == 200:
-        filename = f"calendar_results.{fmt if fmt != 'excel' else 'xlsx'}"
-        with open(filename, 'wb') as f:
+        filename = f"deals_results.{fmt if fmt != 'excel' else 'xlsx'}"
+        with open(filename, "wb") as f:
             f.write(response.content)
         print(f"Downloaded {filename}")
     else:
