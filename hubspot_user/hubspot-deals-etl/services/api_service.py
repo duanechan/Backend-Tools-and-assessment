@@ -90,8 +90,7 @@ class APIService:
                 if not key.startswith('_test_') and key not in ['scan_id']:
                     params[key] = value
             
-            # TODO: Replace with appropriate Hubspot_Deals API endpoint
-            url = f"{self.base_url}/v1/data"
+            url = f"{self.base_url}/crm/v3/objects/deals"
             
             response = self.session.get(url, params=params, headers=headers)
             
@@ -174,8 +173,7 @@ class APIService:
                 'Content-Type': 'application/json'
             }
             
-            # TODO: Replace with appropriate Hubspot_Deals validation endpoint
-            url = f"{self.base_url}/v1/me"
+            url = f"{self.base_url}/crm/v3/objects/deals"
             params = {'limit': 1}
             
             response = self.session.get(url, params=params, headers=headers)
@@ -216,8 +214,7 @@ class APIService:
                 'Content-Type': 'application/json'
             }
             
-            # TODO: Replace with appropriate Hubspot_Deals endpoint
-            url = f"{self.base_url}/v1/me"
+            url = f"{self.base_url}/crm/v3/objects/deals"
             params = {'limit': 1}
             
             response = self.session.get(url, params=params, headers=headers)
@@ -266,8 +263,7 @@ class APIService:
                 'Content-Type': 'application/json'
             }
             
-            # TODO: Replace with appropriate Hubspot_Deals account endpoint
-            url = f"{self.base_url}/v1/account"
+            url = f"{self.base_url}/account-info/v3/details"
             response = self.session.get(url, headers=headers)
             
             if response.status_code == 200:
