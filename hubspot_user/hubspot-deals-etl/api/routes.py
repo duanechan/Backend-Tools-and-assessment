@@ -163,7 +163,7 @@ def create_api():
                     "error": str(e)
                 }, 500
 
-    @scan_ns.route('/<string:scan_id>/status')
+    @scan_ns.route('/status/<string:scan_id>')
     class ScanStatus(Resource):
         @scan_ns.response(404, 'Scan not found')
         @scan_ns.response(500, 'Internal server error')
@@ -208,7 +208,7 @@ def create_api():
                     "error": str(e)
                 }, 500
 
-    @scan_ns.route('/<string:scan_id>/cancel')
+    @scan_ns.route('/cancel/<string:scan_id>')
     class CancelScan(Resource):
         @scan_ns.response(400, 'Cannot cancel scan')
         @scan_ns.response(404, 'Scan not found')
@@ -357,7 +357,7 @@ def create_api():
                     "error": str(e)
                 }, 500
 
-    @results_ns.route('/<string:scan_id>/tables')
+    @results_ns.route('/tables/<string:scan_id>')
     class GetAvailableTables(Resource):
         @results_ns.response(404, 'Scan not found')
         @results_ns.response(400, 'Scan not completed')
@@ -407,7 +407,7 @@ def create_api():
                     "error": str(e)
                 }, 500
 
-    @results_ns.route('/<string:scan_id>/result')
+    @results_ns.route('/result/<string:scan_id>')
     class GetScanResults(Resource):
         @results_ns.param('tableName', 'Name of the table to query (default: users)', default='users')
         @results_ns.param('limit', f'Number of records per page (max {api_config["max_results_limit"]})', type=int, default=api_config['default_results_limit'])
@@ -643,7 +643,7 @@ def create_api():
                     "error": str(e)
                 }, 500
             
-    @scan_ns.route('/<string:scan_id>/remove')
+    @scan_ns.route('/remove/<string:scan_id>')
     class RemoveScan(Resource):
         @scan_ns.response(404, 'Scan not found')
         @scan_ns.response(400, 'Cannot remove active scan')
@@ -783,7 +783,7 @@ def create_api():
                     "error": str(e)
                 }, 500
 
-    @scan_ns.route('/<string:scan_id>/pause')
+    @scan_ns.route('/pause/<string:scan_id>')
     class PauseScan(Resource):
         @scan_ns.response(400, 'Cannot pause scan')
         @scan_ns.response(404, 'Scan not found')
