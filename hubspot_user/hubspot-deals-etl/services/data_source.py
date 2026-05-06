@@ -44,11 +44,6 @@ def create_data_source(
     def get_main_data() -> Iterator[Dict[str, Any]]:
         """
         Extract main data from Hubspot_Deals API with checkpoint support
-
-        TODO: Customize for Hubspot_Deals:
-        - Update resource name and primary_key
-        - Adjust API calls and pagination
-        - Modify data transformation logic
         """
 
         # Initialize state
@@ -177,17 +172,39 @@ def create_data_source(
                     },
                 )
 
-                # TODO: Replace with appropriate Hubspot_Deals API call
                 data = api_service.get_data(
-                    access_token=access_token, limit=1, after=after,
+                    access_token=access_token, 
+                    limit=100, 
+                    after=after,
+                    archived="false",
+                    properties="dealname,amount,closedate,dealstage,pipeline,hubspot_owner_id,dealtype,hs_is_closed,hs_is_closed_won,hs_deal_stage_probability,hs_priority,hs_createdate,hs_lastmodifieddate"
                 )
 
                 page_records = 0
 
-                # TODO: Update data processing based on Hubspot_Deals response structure
-                data_key = "results"  # Update based on API response
+                data_key = "results" 
                 if data_key in data and data[data_key]:
                     for record in data[data_key]:
+                        props = record.get("properties", {})
+                        record = {
+                            "id": record.get("id"),
+                            "archived": record.get("archived"),
+                            "createdAt": record.get("createdAt"),
+                            "updatedAt": record.get("updatedAt"),
+                            "dealname": props.get("dealname"),
+                            "amount": float(props.get("amount")) if props.get("amount") else None,
+                            "closedate": props.get("closedate"),
+                            "dealstage": props.get("dealstage"),
+                            "pipeline": props.get("pipeline"),
+                            "hubspot_owner_id": props.get("hubspot_owner_id"),
+                            "dealtype": props.get("dealtype"),
+                            "hs_is_closed": props.get("hs_is_closed") == "true" if props.get("hs_is_closed") is not None else None,
+                            "hs_is_closed_won": props.get("hs_is_closed_won") == "true" if props.get("hs_is_closed_won") is not None else None,
+                            "hs_deal_stage_probability": float(props.get("hs_deal_stage_probability")) if props.get("hs_deal_stage_probability") else None,
+                            "hs_priority": props.get("hs_priority"),
+                            "hs_createdate": props.get("hs_createdate"),
+                            "hs_lastmodifieddate": props.get("hs_lastmodifieddate"),
+                        }
                         # Check for pause/cancel even within record processing for faster response
                         if check_pause_callback and check_pause_callback(job_id):
                             logger.info(
@@ -263,7 +280,6 @@ def create_data_source(
                 # Save checkpoint periodically
                 if checkpoint_callback and page_count % checkpoint_interval == 0:
                     try:
-                        # TODO: Update pagination logic based on Hubspot_Deals API
                         next_cursor = None
                         if (
                             data.get("paging")
@@ -307,17 +323,12 @@ def create_data_source(
                             },
                         )
 
-                # TODO: Handle pagination based on Hubspot_Deals API response
                 if (
                     data.get("paging")
                     and data["paging"].get("next")
                     and data["paging"]["next"].get("after")
                 ):
                     after = data["paging"]["next"]["after"]
-                elif data.get("has_more"):
-                    after = data.get("next_cursor")
-                elif data.get("next_page_token"):
-                    after = data.get("next_page_token")
                 else:
                     # Final checkpoint on completion
                     if checkpoint_callback:
