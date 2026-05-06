@@ -407,20 +407,20 @@ def create_api():
                     "error": str(e)
                 }, 500
 
-    @results_ns.route('/result/<string:scan_id>')
+    @scan_ns.route('/result/<string:scan_id>')
     class GetScanResults(Resource):
-        @results_ns.param('tableName', 'Name of the table to query (default: users)', default='users')
-        @results_ns.param('limit', f'Number of records per page (max {api_config["max_results_limit"]})', type=int, default=api_config['default_results_limit'])
-        @results_ns.param('offset', 'Number of records to skip', type=int, default=0)
-        @results_ns.response(404, 'Scan not found')
-        @results_ns.response(400, 'Scan not completed or invalid parameters')
-        @results_ns.response(500, 'Internal server error')
+        @scan_ns.param('tableName', 'Name of the table to query (default: hubspot_deals)', default='hubspot_deals')
+        @scan_ns.param('limit', f'Number of records per page (max {api_config["max_results_limit"]})', type=int, default=api_config['default_results_limit'])
+        @scan_ns.param('offset', 'Number of records to skip', type=int, default=0)
+        @scan_ns.response(404, 'Scan not found')
+        @scan_ns.response(400, 'Scan not completed or invalid parameters')
+        @scan_ns.response(500, 'Internal server error')
         def get(self, scan_id):
             """Get scan results with pagination and table selection"""
             request_id = getattr(g, 'request_id', str(uuid.uuid4()))
             
             try:
-                table_name = request.args.get('tableName', 'users')
+                table_name = request.args.get('tableName', 'hubspot_deals')
                 
                 # Validate pagination
                 try:

@@ -152,16 +152,15 @@ Initiates a new deal extraction process for the specified environment.
 #### Response
 ```json
 {
-  "message": "Deal extraction started",
-  "scanId": "unique-scan-identifier",
-  "status": "started"
+  "success": true,
+  "message": "Scan initialization accepted and is now processing in the background."
 }
 ```
 
 #### Status Codes
 - **202**: Extraction started successfully
 - **400**: Invalid request data
-- **409**: Extraction already in progress
+- **409**: Extraction already in progress/Already exists
 - **500**: Internal server error
 
 ---
@@ -180,18 +179,27 @@ Retrieves the current status of an extraction process.
 #### Response (Existing Extraction)
 ```json
 {
-  "id": "internal-job-id",
-  "scanId": "unique-scan-identifier",
-  "status": "running",
-  "started_at": "2024-01-15T10:30:00Z",
-  "completed_at": null,
-  "error_message": null,
-  "created_at": "2024-01-15T10:30:00Z",
-  "updated_at": "2024-01-15T10:35:00Z",
-  "progress": {
-    "total_deals": 500,
-    "deals_extracted": 200,
-    "failed_deals": 3
+  "success": true,
+  "data": {
+    "scanId": "deals-scan-001",
+    "organizationId": "your-org-id",
+    "type": "deals",
+    "status": "completed",
+    "startTime": "2026-05-06T07:34:15.120585+00:00",
+    "endTime": "2026-05-06T07:34:17.918669+00:00",
+    "recordsExtracted": 5,
+    "errorMessage": null,
+    "config": {
+      "filters": {
+        "includeArchived": false
+      },
+    },
+    "metadata": {
+      "extraction_summary": {
+        "total_records": 5
+      },
+    },
+    "duration": 2.798084,
   }
 }
 ```
@@ -199,14 +207,9 @@ Retrieves the current status of an extraction process.
 #### Response (Non-existent Extraction)
 ```json
 {
-  "id": null,
-  "scanId": null,
-  "status": "not_found",
-  "started_at": null,
-  "completed_at": null,
-  "error_message": null,
-  "created_at": null,
-  "updated_at": null
+  "success": false,
+  "message": "No scan found with ID: deals-scan-404",
+  "error": "No scan found with ID: deals-scan-404"
 }
 ```
 
@@ -238,9 +241,10 @@ Cancels an ongoing extraction process.
 #### Response
 ```json
 {
-  "message": "Extraction cancelled successfully",
-  "scanId": "unique-scan-identifier",
-  "status": "cancelled"
+  "success": true,
+  "scanId": "deals-scan-004",
+  "status": "cancelled",
+  "message": "Job cancelled successfully"
 }
 ```
 
@@ -266,9 +270,13 @@ Removes an extraction and all associated data from the system.
 #### Response
 ```json
 {
-  "message": "Extraction and 1,234 events removed successfully",
-  "scanId": "unique-scan-identifier",
-  "status": "removed"
+  "success": true,
+  "message": "Scan deals-scan-004 successfully removed",
+  "data": {
+    "scanId": "deals-scan-004",
+    "tablesRemoved": 0,
+    "metadataRemoved": true
+  }
 }
 ```
 
@@ -300,24 +308,33 @@ Retrieves paginated extraction results with full event details.
 #### Response
 ```json
 {
-  "scanId": "unique-scan-identifier",
-  "status": "completed",
-  "data": [],
-  "pagination": {
-    "current_page": 1,
-    "page_size": 100,
-    "total_events": 1500,
-    "total_pages": 15,
-    "has_next": true,
-    "has_previous": false,
-    "next_page": 2,
-    "previous_page": null
-  },
-  "count": 100,
-  "total_count": 1500,
-  "started_at": "2024-01-15T10:30:00Z",
-  "completed_at": "2024-01-15T10:45:00Z",
-  "error_message": null
+  "success": true,
+  "data": {
+    "scanId": "deals-scan-001",
+    "tableName": "hubspot_deals",
+    "records": [
+      {
+        "id": "323237593819",
+        "dealname": "TechNova - Starter Plan Upgrade",
+        "amount": 5000.0,
+        "closedate": "2026-06-15T05:43:37.400000+00:00",
+        "dealstage": "contractsent",
+        "pipeline": "default",
+        "hubspot_owner_id": "91676456",
+        "hs_is_closed": false,
+        "hs_is_closed_won": false,
+        "hs_deal_stage_probability": 0.9,
+        "archived": false
+      }
+    ],
+    "pagination": {
+      "total": 5,
+      "limit": 100,
+      "offset": 0,
+      "hasMore": false,
+      "totalPages": 1
+    }
+  }
 }
 ```
 
@@ -632,7 +649,7 @@ payload = {
         "scanId": "deals-sync-001",
         "type": ["deals"],
         "auth": {
-            "access_token": "pat-na1-..."
+            "access_token": "pat-na..."
         }
     }
 }
