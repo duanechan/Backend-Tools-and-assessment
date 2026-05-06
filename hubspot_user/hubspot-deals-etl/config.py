@@ -107,7 +107,7 @@ class Config:
     # API-specific settings
     API_DOCS_PATH = '/docs'
     API_DOCS_ENABLED = True
-    API_PREFIX = '/api'
+    API_PREFIX = '/api/v1'
     
     @classmethod
     def get_database_url(cls) -> str:
